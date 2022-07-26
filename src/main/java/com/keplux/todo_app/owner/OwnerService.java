@@ -2,6 +2,7 @@ package com.keplux.todo_app.owner;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,17 +34,22 @@ public class OwnerService {
   }
 
   public ResponseEntity<Owner> updateOwner(Long ownerId, Owner updatedOwner) {
-    Owner owner = ownerRepository.findById(ownerId)
-        .orElseThrow(() -> new NoSuchElementException("No Owner with id " + ownerId));
-    owner.setFirstName(updatedOwner.getFirstName());
-    owner.setLastName(updatedOwner.getLastName());
-    owner.setEmail(updatedOwner.getEmail());
-    owner.setPassword(updatedOwner.getPassword());
-
-    return new ResponseEntity<>(ownerRepository.save(owner), HttpStatus.OK);
+    Optional<Owner> owner = ownerRepository.findById(ownerId);
+    if (owner.isPresent()) {
+      Owner o = owner.get();
+      o.setFirstName(updatedOwner.getFirstName());
+      o.setLastName(updatedOwner.getLastName());
+      o.setEmail(updatedOwner.getEmail());
+      o.setPassword(updatedOwner.getPassword());
+      return new ResponseEntity<>(ownerRepository.save(o), HttpStatus.OK);
+    }
+    return new ResponseEntity<>(HttpStatus.NOT_FOUND);
   }
 
   public ResponseEntity<HttpStatus> deleteOwnerById(Long ownerId) {
+    if (!ownerRepository.existsById(ownerId)) {
+      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
     ownerRepository.deleteById(ownerId);
     return new ResponseEntity<>(HttpStatus.NO_CONTENT);
   }
